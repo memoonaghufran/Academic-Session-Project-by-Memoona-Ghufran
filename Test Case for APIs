@@ -1,0 +1,38 @@
+import unittest
+import json
+from your_flask_app_file import app
+
+class TestGradeCalculatorAPI(unittest.TestCase):
+    def setUp(self):
+        self.app = app.test_client()
+        self.app.testing = True
+
+    def test_calculate_grade(self):
+        data = {
+            'subject1': 85,
+            'subject2': 92,
+            'subject3': 78
+        }
+
+        response = self.app.post('/calculate_grade', data=json.dumps(data), content_type='application/json')
+        result = json.loads(response.data.decode('utf-8'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('average_score', result)
+        self.assertIn('grade', result)
+
+    def test_invalid_input(self):
+        data = {
+            'subject1': 'invalid',
+            'subject2': 92,
+            'subject3': 78
+        }
+
+        response = self.app.post('/calculate_grade', data=json.dumps(data), content_type='application/json')
+        result = json.loads(response.data.decode('utf-8'))
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('error', result)
+
+if _name_ == '_main_':
+    unittest.main()
