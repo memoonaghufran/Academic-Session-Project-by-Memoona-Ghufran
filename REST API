@@ -1,0 +1,48 @@
+from flask import Flask, request, jsonify
+from pymongo import MongoClient
+
+app = Flask(_name_)
+
+# Connect to MongoDB
+client = MongoClient('mongodb://localhost:27017/')
+db = client['grades']
+
+@app.route('/calculate_grade', methods=['POST'])
+def calculate_grade():
+    try:
+        # Get scores from the JSON payload
+        data = request.get_json()
+        subject1_score = float(data.get('subject1'))
+        subject2_score = float(data.get('subject2'))
+        subject3_score = float(data.get('subject3'))
+
+        # Calculate average score
+        average_score = (subject1_score + subject2_score + subject3_score) / 3
+
+        # Determine grade based on average score
+        if average_score >= 90:
+            grade = "A"
+        elif 80 <= average_score < 90:
+            grade = "B"
+        elif 70 <= average_score < 80:
+            grade = "C"
+        elif 60 <= average_score < 70:
+            grade = "D"
+        else:
+            grade = "F"
+
+        # Save result to MongoDB
+        result = {
+            'average_score': round(average_score, 2),
+            'grade': grade
+        }
+        db.results.insert_one(result)
+
+        # Return result as JSON
+        return jsonify(result)
+
+    except ValueError:
+        return jsonify({'error': 'Please provide valid numeric scores'}), 400
+
+if _name_ == '_main_':
+    app.run(debug=True)
